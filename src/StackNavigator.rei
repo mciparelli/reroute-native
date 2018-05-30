@@ -15,6 +15,7 @@ module CreateStackNavigator:
         push: Config.route => unit,
         setOptions: options => unit,
         pop: unit => unit,
+        goBack: int => unit,
       };
       let make:
         (

@@ -60,11 +60,13 @@ module CreateStackNavigator = (Config: {type route;}) => {
       | RemoveLastScreen
       | DequeueTransition
       | EnqueueTransition(int, int)
-      | PopScreen(string);
+      | PopScreen(string)
+      | GoBack(int);
     type navigation = {
       push: Config.route => unit,
       setOptions: options => unit,
       pop: unit => unit,
+      goBack: int => unit
     };
     include
       Persistence.CreatePersistence(
@@ -396,6 +398,20 @@ module CreateStackNavigator = (Config: {type route;}) => {
             ReasonReact.NoUpdate;
           }
         /***
+         * Go back to a particular screen
+         */
+        | GoBack(screensCount) =>
+          let newScreenIndex = state.activeScreen - screensCount;
+          if (state.activeScreen > 0 && newScreenIndex > 0 && newScreenIndex < state.activeScreen) {
+            ReasonReact.Update({
+              ...state,
+              pendingTransition: None,
+              activeScreen: newScreenIndex,
+            });
+          } else {
+            ReasonReact.NoUpdate;
+          };
+        /***
          * Removes a stale screen from the stack w/o animation.
          *
          * This is usually done when the pop animation of particular screen
@@ -521,6 +537,7 @@ module CreateStackNavigator = (Config: {type route;}) => {
                              push: route =>
                                self.send(PushScreen(route, screen.key)),
                              pop: () => self.send(PopScreen(screen.key)),
+                             goBack: screensCount => self.send(GoBack(screensCount)),
                              setOptions: opts =>
                                self.send(SetOptions(opts, screen.key)),
                            },
